@@ -88,7 +88,6 @@
             margin: 0 auto;
         }
 
-        /* cabeçalho com tema */
         .header-tools {
             display: flex;
             justify-content: space-between;
@@ -144,7 +143,6 @@
             font-weight: 500;
         }
 
-        /* cards */
         .card {
             background: var(--card-bg);
             border-radius: 28px;
@@ -393,11 +391,19 @@
 
         footer {
             text-align: center;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: var(--footer-color);
             margin-top: 2rem;
             border-top: 1px solid var(--border-light);
-            padding-top: 1.5rem;
+            padding-top: 1.2rem;
+        }
+
+        .author {
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            margin-top: 0.3rem;
+            font-size: 0.7rem;
+            color: var(--footer-color);
         }
 
         button, input {
@@ -452,7 +458,7 @@
 
     <!-- Diluente -->
     <div class="card">
-        <h2>Diluente (BAC / Água estéril / NaCl)</h2>
+        <h2>Reconstituinte/Diluente (BAC / Água estéril / NaCl)</h2>
         <div class="radio-group" id="diluenteGroup">
             <label><input type="radio" name="diluenteOption" value="0.5"> 0,5 mL</label>
             <label><input type="radio" name="diluenteOption" value="1.5"> 1,5 mL</label>
@@ -471,7 +477,7 @@
 
     <!-- Seringa U-100 -->
     <div class="card">
-        <h2>Seringa de Insulina U-100 (capacidade)</h2>
+        <h2>Seringa U-100 (capacidade)</h2>
         <div class="radio-group" id="seringaGroup">
             <label><input type="radio" name="seringaOption" value="0.3"> 0,3 mL (30 unidades)</label>
             <label><input type="radio" name="seringaOption" value="0.5"> 0,5 mL (50 unidades)</label>
@@ -498,7 +504,10 @@
             <div class="scale" id="referenceScale"></div>
         </div>
     </div>
-    <footer>Uso exclusivo para referência técnica. Sempre confirme o cálculo com um profissional de saúde.</footer>
+    <footer>
+        <div>Uso exclusivo para referência técnica. Sempre confirme o cálculo com um profissional de saúde.</div>
+        <div class="author">Enf. Auditor. Gabriel S. Siebeneichler</div>
+    </footer>
 </div>
 
 <script>

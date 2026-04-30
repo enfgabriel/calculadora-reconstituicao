@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Calculadora de Reconstituição e Dose | Profissional</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ========== VARIÁVEIS ========== */
+        :root {
+            --bg-body: #eef2f7;
+            --card-bg: #ffffff;
+            --text-primary: #1a2c3e;
+            --text-secondary: #2c4b6e;
+            --border-light: #cfdfe9;
+            --radio-bg: #f5f9fc;
+            --radio-checked-bg: #e0f0ea;
+            --radio-checked-border: #1f8a6b;
+            --radio-checked-text: #0b5e48;
+            --custom-panel-bg: #f9fbfd;
+            --custom-border: #dde6ed;
+            --btn-quick-bg: #ecf3f8;
+            --btn-quick-hover: #d4e2ed;
+            --dose-btn-bg: #f0f4f9;
+            --dose-btn-border: #cbdae3;
+            --dose-btn-hover: #dde9f2;
+            --result-area-bg: linear-gradient(120deg, #f8fefc, #edf6f2);
+            --result-card-bg: white;
+            --result-card-border: #dde6ef;
+            --result-value-color: #126e54;
+            --error-bg: #ffe8e6;
+            --error-border: #d9534f;
+            --error-text: #b13b38;
+            --info-bg: #eef3fc;
+            --scale-item-bg: #ecf3f0;
+            --footer-color: #6f8eaa;
+            --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.05);
+            --transition: all 0.2s ease;
+        }
+
+        body.dark {
+            --bg-body: #121826;
+            --card-bg: #1e2a3a;
+            --text-primary: #e3edf5;
+            --text-secondary: #bdd4e8;
+            --border-light: #2d3e4e;
+            --radio-bg: #253544;
+            --radio-checked-bg: #1f4d3f;
+            --radio-checked-border: #2c9b77;
+            --radio-checked-text: #c0f0e0;
+            --custom-panel-bg: #1f2c38;
+            --custom-border: #334454;
+            --btn-quick-bg: #2a3b48;
+            --btn-quick-hover: #3e5568;
+            --dose-btn-bg: #253544;
+            --dose-btn-border: #3c4f60;
+            --dose-btn-hover: #2f4255;
+            --result-area-bg: linear-gradient(120deg, #18222e, #111c26);
+            --result-card-bg: #1f2d3b;
+            --result-card-border: #2f4052;
+            --result-value-color: #5fc7a8;
+            --error-bg: #3a2322;
+            --error-border: #c96561;
+            --error-text: #f5b0ac;
+            --info-bg: #1e2f3c;
+            --scale-item-bg: #1f303e;
+            --footer-color: #7f95af;
+            --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        body {
+            background: var(--bg-body);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 1.5rem 1rem;
+            color: var(--text-primary);
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* cabeçalho com tema */
+        .header-tools {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.2rem;
+        }
+
+        h1 {
+            font-size: 1.7rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            background: linear-gradient(135deg, #1c6e8f, #0a4b6e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        body.dark h1 {
+            background: linear-gradient(135deg, #7bcbd9, #4b9ebe);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 40px;
+            padding: 0.4rem 1rem;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(2px);
+        }
+
+        .theme-toggle:hover {
+            background: var(--radio-checked-bg);
+            color: var(--radio-checked-text);
+            border-color: var(--radio-checked-border);
+        }
+
+        .sub {
+            color: var(--text-secondary);
+            margin-bottom: 1.8rem;
+            border-left: 3px solid #2c9b77;
+            padding-left: 12px;
+            font-weight: 500;
+        }
+
+        /* cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 28px;
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            margin-bottom: 1.8rem;
+            transition: var(--transition);
+            border: 1px solid var(--border-light);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            align-items: center;
+            margin-bottom: 0.6rem;
+        }
+
+        .radio-group label {
+            background: var(--radio-bg);
+            padding: 8px 18px;
+            border-radius: 40px;
+            border: 1px solid var(--border-light);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .radio-group input[type="radio"] {
+            margin-right: 6px;
+            accent-color: #1f8a6b;
+        }
+
+        .radio-group label:has(input:checked) {
+            background: var(--radio-checked-bg);
+            border-color: var(--radio-checked-border);
+            color: var(--radio-checked-text);
+        }
+
+        .custom-panel {
+            background: var(--custom-panel-bg);
+            padding: 12px 16px;
+            border-radius: 20px;
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid var(--custom-border);
+        }
+
+        .custom-panel input {
+            padding: 10px 14px;
+            font-size: 1rem;
+            border-radius: 40px;
+            border: 1px solid var(--border-light);
+            width: 130px;
+            text-align: center;
+            font-weight: 500;
+            background: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .quick-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .quick-btn {
+            background: var(--btn-quick-bg);
+            border: none;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-secondary);
+        }
+
+        .quick-btn:hover {
+            background: var(--btn-quick-hover);
+            transform: scale(0.96);
+        }
+
+        .dose-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, auto));
+            gap: 10px;
+            margin: 16px 0 12px;
+        }
+
+        .dose-btn {
+            background: var(--dose-btn-bg);
+            border: 1px solid var(--dose-btn-border);
+            border-radius: 40px;
+            padding: 8px 0;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-secondary);
+        }
+
+        .dose-btn:hover {
+            background: var(--dose-btn-hover);
+            transform: translateY(-1px);
+        }
+
+        .dose-main {
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .dose-main label {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .dose-main input {
+            padding: 12px 15px;
+            font-size: 1rem;
+            border-radius: 40px;
+            border: 1px solid var(--border-light);
+            width: 150px;
+            text-align: center;
+            font-weight: 500;
+            background: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .result-area {
+            background: var(--result-area-bg);
+            border-radius: 28px;
+            padding: 1.6rem;
+        }
+
+        .result-main {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+
+        .result-card {
+            background: var(--result-card-bg);
+            border-radius: 32px;
+            padding: 1rem 1.2rem;
+            min-width: 150px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            flex: 1;
+            border: 1px solid var(--result-card-border);
+        }
+
+        .result-card span:first-child {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--result-value-color);
+            line-height: 1.2;
+        }
+
+        .unit-sub {
+            font-size: 0.75rem;
+            font-weight: normal;
+        }
+
+        .error-msg {
+            background: var(--error-bg);
+            border-left: 5px solid var(--error-border);
+            padding: 12px 18px;
+            border-radius: 24px;
+            color: var(--error-text);
+            font-weight: 500;
+            margin-top: 16px;
+        }
+
+        .info-conc {
+            background: var(--info-bg);
+            border-radius: 20px;
+            padding: 12px 18px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            border: 1px solid var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .ref-table {
+            margin-top: 24px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 12px;
+            text-align: center;
+            overflow-x: auto;
+            border: 1px solid var(--border-light);
+        }
+
+        .ref-table h4 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .scale {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            font-family: monospace;
+            font-weight: 500;
+        }
+
+        .scale-item {
+            background: var(--scale-item-bg);
+            padding: 6px 12px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--footer-color);
+            margin-top: 2rem;
+            border-top: 1px solid var(--border-light);
+            padding-top: 1.5rem;
+        }
+
+        button, input {
+            font-family: inherit;
+        }
+
+        @media (max-width: 700px) {
+            .card {
+                padding: 1.2rem;
+            }
+            .result-value {
+                font-size: 1.5rem;
+            }
+            .radio-group label {
+                padding: 6px 14px;
+                font-size: 0.85rem;
+            }
+            .dose-grid {
+                grid-template-columns: repeat(auto-fill, minmax(70px, auto));
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header-tools">
+        <h1>Calculadora de Reconstituição e Dose</h1>
+        <button class="theme-toggle" id="themeToggle" aria-label="Alternar modo escuro/claro">
+            <span id="themeIcon">🌙</span> Modo escuro
+        </button>
+    </div>
+    <div class="sub">Reconstituição de pó liofilizado · Seringa Insulina U-100 (1 mL = 100 UI)</div>
+
+    <!-- Conteúdo do frasco -->
+    <div class="card">
+        <h2>Conteúdo do frasco (mg)</h2>
+        <div class="radio-group" id="frascoGroup">
+            <label><input type="radio" name="frascoOption" value="5"> 5 mg</label>
+            <label><input type="radio" name="frascoOption" value="15"> 15 mg</label>
+            <label><input type="radio" name="frascoOption" value="30"> 30 mg</label>
+            <label><input type="radio" name="frascoOption" value="custom"> Personalizado</label>
+        </div>
+        <div id="frascoCustomPanel" class="custom-panel" style="display: none;">
+            <input type="number" id="frascoCustomVal" step="any" value="10" placeholder="mg">
+            <div class="quick-buttons">
+                <button class="quick-btn" data-quick-frasco="10">10 mg</button>
+                <button class="quick-btn" data-quick-frasco="20">20 mg</button>
+                <button class="quick-btn" data-quick-frasco="60">60 mg</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diluente -->
+    <div class="card">
+        <h2>Diluente (BAC / Água estéril / NaCl)</h2>
+        <div class="radio-group" id="diluenteGroup">
+            <label><input type="radio" name="diluenteOption" value="0.5"> 0,5 mL</label>
+            <label><input type="radio" name="diluenteOption" value="1.5"> 1,5 mL</label>
+            <label><input type="radio" name="diluenteOption" value="2.5"> 2,5 mL</label>
+            <label><input type="radio" name="diluenteOption" value="custom"> Personalizado</label>
+        </div>
+        <div id="diluenteCustomPanel" class="custom-panel" style="display: none;">
+            <input type="number" id="diluenteCustomVal" step="any" value="1.0" placeholder="mL">
+            <div class="quick-buttons">
+                <button class="quick-btn" data-quick-diluente="1">1 mL</button>
+                <button class="quick-btn" data-quick-diluente="2">2 mL</button>
+                <button class="quick-btn" data-quick-diluente="3">3 mL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seringa U-100 -->
+    <div class="card">
+        <h2>Seringa de Insulina U-100 (capacidade)</h2>
+        <div class="radio-group" id="seringaGroup">
+            <label><input type="radio" name="seringaOption" value="0.3"> 0,3 mL (30 unidades)</label>
+            <label><input type="radio" name="seringaOption" value="0.5"> 0,5 mL (50 unidades)</label>
+            <label><input type="radio" name="seringaOption" value="1.0" checked> 1,0 mL (100 unidades)</label>
+        </div>
+    </div>
+
+    <!-- Dose necessária -->
+    <div class="card">
+        <h2>Dose necessária (mg)</h2>
+        <div class="dose-grid" id="doseButtonsGrid"></div>
+        <div class="dose-main">
+            <label>Personalizar dose:</label>
+            <input type="number" id="doseCustomInput" step="any" value="0.25" placeholder="mg">
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    <div class="card result-area">
+        <h2>Resultado da aspiração</h2>
+        <div id="resultDynamic"></div>
+        <div class="ref-table">
+            <h4>Relação rápida U-100 (mL ↔ unidades)</h4>
+            <div class="scale" id="referenceScale"></div>
+        </div>
+    </div>
+    <footer>Uso exclusivo para referência técnica. Sempre confirme o cálculo com um profissional de saúde.</footer>
+</div>
+
+<script>
+    // ========== DOM ==========
+    const frascoRadios = document.querySelectorAll('input[name="frascoOption"]');
+    const frascoCustomPanel = document.getElementById('frascoCustomPanel');
+    const frascoCustomInput = document.getElementById('frascoCustomVal');
+    const diluenteRadios = document.querySelectorAll('input[name="diluenteOption"]');
+    const diluenteCustomPanel = document.getElementById('diluenteCustomPanel');
+    const diluenteCustomInput = document.getElementById('diluenteCustomVal');
+    const seringaRadios = document.querySelectorAll('input[name="seringaOption"]');
+    const doseCustomInput = document.getElementById('doseCustomInput');
+    const doseButtonsContainer = document.getElementById('doseButtonsGrid');
+
+    // Predefinições de dose
+    const dosePresets = [0.25, 0.5, 1, 1.7, 2, 2.4, 2.5, 4, 5, 7.5, 10, 12, 12.5, 15, 17.5, 20, 25, 30];
+
+    function buildDoseButtons() {
+        doseButtonsContainer.innerHTML = '';
+        dosePresets.forEach(val => {
+            const btn = document.createElement('button');
+            btn.textContent = `${val} mg`;
+            btn.classList.add('dose-btn');
+            btn.addEventListener('click', () => {
+                doseCustomInput.value = val;
+                updateCalculation();
+            });
+            doseButtonsContainer.appendChild(btn);
+        });
+    }
+
+    // Quick buttons
+    function setupQuickButtons() {
+        document.querySelectorAll('[data-quick-frasco]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = parseFloat(btn.getAttribute('data-quick-frasco'));
+                if (!isNaN(val)) frascoCustomInput.value = val;
+                const customRadio = document.querySelector('input[name="frascoOption"][value="custom"]');
+                if (customRadio) customRadio.checked = true;
+                toggleFrascoCustomPanel();
+                updateCalculation();
+            });
+        });
+        document.querySelectorAll('[data-quick-diluente]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = parseFloat(btn.getAttribute('data-quick-diluente'));
+                if (!isNaN(val)) diluenteCustomInput.value = val;
+                const customRadio = document.querySelector('input[name="diluenteOption"][value="custom"]');
+                if (customRadio) customRadio.checked = true;
+                toggleDiluenteCustomPanel();
+                updateCalculation();
+            });
+        });
+    }
+
+    function toggleFrascoCustomPanel() {
+        const selected = document.querySelector('input[name="frascoOption"]:checked');
+        frascoCustomPanel.style.display = (selected && selected.value === 'custom') ? 'flex' : 'none';
+    }
+
+    function toggleDiluenteCustomPanel() {
+        const selected = document.querySelector('input[name="diluenteOption"]:checked');
+        diluenteCustomPanel.style.display = (selected && selected.value === 'custom') ? 'flex' : 'none';
+    }
+
+    function getFrascoMg() {
+        const selected = document.querySelector('input[name="frascoOption"]:checked');
+        if (!selected) return 5;
+        if (selected.value === 'custom') {
+            let val = parseFloat(frascoCustomInput.value);
+            return (isNaN(val) || val <= 0) ? 0 : val;
+        }
+        return parseFloat(selected.value);
+    }
+
+    function getDiluenteMl() {
+        const selected = document.querySelector('input[name="diluenteOption"]:checked');
+        if (!selected) return 0.5;
+        if (selected.value === 'custom') {
+            let val = parseFloat(diluenteCustomInput.value);
+            return (isNaN(val) || val <= 0) ? 0 : val;
+        }
+        return parseFloat(selected.value);
+    }
+
+    function getSeringaCapMl() {
+        const selected = document.querySelector('input[name="seringaOption"]:checked');
+        return selected ? parseFloat(selected.value) : 1.0;
+    }
+
+    function getDoseMg() {
+        let val = parseFloat(doseCustomInput.value);
+        return isNaN(val) ? 0 : val;
+    }
+
+    function updateCalculation() {
+        const frascoMg = getFrascoMg();
+        const diluenteMl = getDiluenteMl();
+        const seringaCapMl = getSeringaCapMl();
+        const doseMg = getDoseMg();
+
+        let errorMsg = '';
+        let volumeMl = 0;
+        let units = 0;
+        let concentracao = 0;
+        let isValid = true;
+
+        if (frascoMg <= 0) {
+            errorMsg = 'Conteúdo do frasco inválido (mg). Insira um valor positivo.';
+            isValid = false;
+        } else if (diluenteMl <= 0) {
+            errorMsg = 'Volume de diluente inválido. Deve ser maior que zero.';
+            isValid = false;
+        } else if (doseMg < 0) {
+            errorMsg = 'Dose inválida.';
+            isValid = false;
+        } else if (doseMg > frascoMg && doseMg > 0) {
+            errorMsg = `Atenção: A dose (${doseMg} mg) é maior que o conteúdo total do frasco (${frascoMg} mg).`;
+            isValid = false;
+        } else {
+            concentracao = frascoMg / diluenteMl;
+            if (doseMg === 0) {
+                volumeMl = 0;
+                units = 0;
+            } else {
+                volumeMl = doseMg / concentracao;
+                units = volumeMl * 100;
+            }
+            if (volumeMl > seringaCapMl + 0.0001) {
+                errorMsg = `O volume aspirado (${volumeMl.toFixed(3)} mL = ${units.toFixed(1)} UI) excede a capacidade da seringa de ${seringaCapMl} mL (${seringaCapMl*100} UI). Utilize seringa maior ou reduza a dose.`;
+                isValid = false;
+            }
+        }
+
+        const resultDiv = document.getElementById('resultDynamic');
+        if (!isValid) {
+            resultDiv.innerHTML = `
+                <div class="error-msg">${errorMsg}</div>
+                <div class="info-conc">Concentração: ${frascoMg > 0 && diluenteMl > 0 ? (frascoMg/diluenteMl).toFixed(2) : '?'} mg/mL</div>
+            `;
+            return;
+        }
+
+        const volumeFixed = volumeMl.toFixed(3);
+        const unitsFixed = units.toFixed(1);
+        const concFixed = concentracao.toFixed(2);
+        const seringaUnitsCap = seringaCapMl * 100;
+        let warningPrecision = '';
+        if (volumeMl > 0 && volumeMl < 0.01) {
+            warningPrecision = '<div class="error-msg" style="background: var(--error-bg); border-left-color: #e6a017;">Volume muito pequeno (menor que 0,01 mL). Verifique a precisão da seringa.</div>';
+        }
+
+        resultDiv.innerHTML = `
+            <div class="result-main">
+                <div class="result-card">
+                    <span>Concentração</span>
+                    <div class="result-value">${concFixed} <span class="unit-sub">mg/mL</span></div>
+                </div>
+                <div class="result-card">
+                    <span>Volume a aspirar</span>
+                    <div class="result-value">${volumeFixed} <span class="unit-sub">mL</span></div>
+                </div>
+                <div class="result-card">
+                    <span>Unidades (UI) U-100</span>
+                    <div class="result-value">${unitsFixed} <span class="unit-sub">UI</span></div>
+                </div>
+            </div>
+            <div class="info-conc">
+                Reconstituição: ${frascoMg} mg + ${diluenteMl} mL → ${concFixed} mg/mL &nbsp;|&nbsp;
+                Dose: ${doseMg} mg → ${volumeFixed} mL (${unitsFixed} UI) <br>
+                Seringa capacidade: ${seringaCapMl} mL (${seringaUnitsCap} UI) 
+                ${volumeMl <= seringaCapMl ? '✓ Dentro da capacidade' : '⚠ Excede capacidade'}
+            </div>
+            ${warningPrecision}
+        `;
+    }
+
+    function buildReferenceScale() {
+        const scaleDiv = document.getElementById('referenceScale');
+        const steps = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50];
+        scaleDiv.innerHTML = steps.map(ml => `<div class="scale-item">${ml.toFixed(2)} mL → ${ml * 100} UI</div>`).join('');
+    }
+
+    function bindEvents() {
+        frascoRadios.forEach(r => r.addEventListener('change', () => { toggleFrascoCustomPanel(); updateCalculation(); }));
+        diluenteRadios.forEach(r => r.addEventListener('change', () => { toggleDiluenteCustomPanel(); updateCalculation(); }));
+        seringaRadios.forEach(r => r.addEventListener('change', () => updateCalculation()));
+        frascoCustomInput.addEventListener('input', () => {
+            const customRadio = document.querySelector('input[name="frascoOption"][value="custom"]');
+            if (customRadio && !customRadio.checked) customRadio.checked = true;
+            toggleFrascoCustomPanel();
+            updateCalculation();
+        });
+        diluenteCustomInput.addEventListener('input', () => {
+            const customRadio = document.querySelector('input[name="diluenteOption"][value="custom"]');
+            if (customRadio && !customRadio.checked) customRadio.checked = true;
+            toggleDiluenteCustomPanel();
+            updateCalculation();
+        });
+        doseCustomInput.addEventListener('input', () => updateCalculation());
+        doseCustomInput.addEventListener('change', () => updateCalculation());
+    }
+
+    // ========== TEMA CLARO/ESCURO ==========
+    function initTheme() {
+        const storedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = storedTheme === 'dark' || (!storedTheme && prefersDark);
+        if (isDark) {
+            document.body.classList.add('dark');
+        } else {
+            document.body.classList.remove('dark');
+        }
+        updateThemeButtonText();
+    }
+
+    function updateThemeButtonText() {
+        const isDark = document.body.classList.contains('dark');
+        const themeIconSpan = document.getElementById('themeIcon');
+        if (themeIconSpan) {
+            themeIconSpan.textContent = isDark ? '☀️' : '🌙';
+        }
+        const btn = document.getElementById('themeToggle');
+        if (btn) {
+            btn.innerHTML = isDark ? '<span id="themeIcon">☀️</span> Modo claro' : '<span id="themeIcon">🌙</span> Modo escuro';
+        }
+    }
+
+    function toggleTheme() {
+        if (document.body.classList.contains('dark')) {
+            document.body.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+        }
+        updateThemeButtonText();
+    }
+
+    // Inicialização completa
+    function init() {
+        buildDoseButtons();
+        buildReferenceScale();
+        toggleFrascoCustomPanel();
+        toggleDiluenteCustomPanel();
+        // valores padrão
+        const defaultFrasco = document.querySelector('input[name="frascoOption"][value="5"]');
+        if (defaultFrasco) defaultFrasco.checked = true;
+        const defaultDiluente = document.querySelector('input[name="diluenteOption"][value="0.5"]');
+        if (defaultDiluente) defaultDiluente.checked = true;
+        const defaultSeringa = document.querySelector('input[name="seringaOption"][value="1.0"]');
+        if (defaultSeringa) defaultSeringa.checked = true;
+        doseCustomInput.value = '0.25';
+
+        setupQuickButtons();
+        bindEvents();
+        initTheme();
+        updateCalculation();
+
+        const themeBtn = document.getElementById('themeToggle');
+        if (themeBtn) themeBtn.addEventListener('click', toggleTheme);
+    }
+
+    init();
+</script>
+</body>
+</html>

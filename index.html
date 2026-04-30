@@ -42,6 +42,10 @@
             --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03);
             --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.05);
             --transition: all 0.2s ease;
+            --syringe-fill: #2c9b77;
+            --syringe-bg: #e2e9f0;
+            --syringe-border: #b0c4d9;
+            --syringe-marking: #2c4b6e;
         }
 
         body.dark {
@@ -73,6 +77,10 @@
             --footer-color: #7f95af;
             --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
             --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.25);
+            --syringe-fill: #3aa57f;
+            --syringe-bg: #2d3f4e;
+            --syringe-border: #4d6b82;
+            --syringe-marking: #bdd4e8;
         }
 
         body {
@@ -355,6 +363,51 @@
             color: var(--text-primary);
         }
 
+        .syringe-container {
+            margin-top: 24px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 1rem;
+            border: 1px solid var(--border-light);
+        }
+
+        .syringe-label {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .syringe-canvas-wrapper {
+            position: relative;
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: var(--syringe-bg);
+            border-radius: 12px;
+            border: 1px solid var(--syringe-border);
+        }
+
+        .ui-info {
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 12px;
+            text-align: center;
+            background: var(--info-bg);
+            padding: 6px 12px;
+            border-radius: 40px;
+            display: inline-block;
+            width: auto;
+        }
+
         .ref-table {
             margin-top: 24px;
             background: var(--card-bg);
@@ -437,7 +490,6 @@
     </div>
     <div class="sub">Reconstituição de pó liofilizado · Seringa Insulina U-100 (1 mL = 100 UI)</div>
 
-    <!-- Conteúdo do frasco -->
     <div class="card">
         <h2>Conteúdo do frasco (mg)</h2>
         <div class="radio-group" id="frascoGroup">
@@ -456,9 +508,8 @@
         </div>
     </div>
 
-    <!-- Diluente -->
     <div class="card">
-        <h2>Reconstituinte/Diluente (BAC / Água estéril / NaCl)</h2>
+        <h2>Diluente (BAC / Água estéril / NaCl)</h2>
         <div class="radio-group" id="diluenteGroup">
             <label><input type="radio" name="diluenteOption" value="0.5"> 0,5 mL</label>
             <label><input type="radio" name="diluenteOption" value="1.5"> 1,5 mL</label>
@@ -475,9 +526,8 @@
         </div>
     </div>
 
-    <!-- Seringa U-100 -->
     <div class="card">
-        <h2>Seringa U-100 (capacidade)</h2>
+        <h2>Seringa de Insulina U-100 (capacidade)</h2>
         <div class="radio-group" id="seringaGroup">
             <label><input type="radio" name="seringaOption" value="0.3"> 0,3 mL (30 unidades)</label>
             <label><input type="radio" name="seringaOption" value="0.5"> 0,5 mL (50 unidades)</label>
@@ -485,7 +535,6 @@
         </div>
     </div>
 
-    <!-- Dose necessária -->
     <div class="card">
         <h2>Dose necessária (mg)</h2>
         <div class="dose-grid" id="doseButtonsGrid"></div>
@@ -495,10 +544,10 @@
         </div>
     </div>
 
-    <!-- Resultados -->
     <div class="card result-area">
         <h2>Resultado da aspiração</h2>
         <div id="resultDynamic"></div>
+        <div id="syringeVisualization"></div>
         <div class="ref-table">
             <h4>Relação rápida U-100 (mL ↔ unidades)</h4>
             <div class="scale" id="referenceScale"></div>
@@ -511,7 +560,7 @@
 </div>
 
 <script>
-    // ========== DOM ==========
+    // Elementos DOM
     const frascoRadios = document.querySelectorAll('input[name="frascoOption"]');
     const frascoCustomPanel = document.getElementById('frascoCustomPanel');
     const frascoCustomInput = document.getElementById('frascoCustomVal');
@@ -521,8 +570,8 @@
     const seringaRadios = document.querySelectorAll('input[name="seringaOption"]');
     const doseCustomInput = document.getElementById('doseCustomInput');
     const doseButtonsContainer = document.getElementById('doseButtonsGrid');
+    const syringeContainer = document.getElementById('syringeVisualization');
 
-    // Predefinições de dose
     const dosePresets = [0.25, 0.5, 1, 1.7, 2, 2.4, 2.5, 4, 5, 7.5, 10, 12, 12.5, 15, 17.5, 20, 25, 30];
 
     function buildDoseButtons() {
@@ -539,7 +588,6 @@
         });
     }
 
-    // Quick buttons
     function setupQuickButtons() {
         document.querySelectorAll('[data-quick-frasco]').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -598,15 +646,126 @@
         return selected ? parseFloat(selected.value) : 1.0;
     }
 
+    function getSeringaCapUI() {
+        return getSeringaCapMl() * 100;
+    }
+
     function getDoseMg() {
         let val = parseFloat(doseCustomInput.value);
         return isNaN(val) ? 0 : val;
+    }
+
+    // Função que desenha a seringa com seta vermelha para baixo
+    function drawSyringe(canvas, maxUI, valueUI) {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.clientWidth;
+        const height = 80;
+        canvas.width = width;
+        canvas.height = height;
+
+        ctx.clearRect(0, 0, width, height);
+        
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--syringe-bg').trim();
+        ctx.fillRect(0, 0, width, height);
+        
+        ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--syringe-border').trim();
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(0, 0, width, height);
+        
+        const percent = Math.min(100, Math.max(0, (valueUI / maxUI) * 100));
+        const fillWidth = (percent / 100) * width;
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--syringe-fill').trim();
+        ctx.fillRect(0, 0, fillWidth, height);
+        
+        ctx.beginPath();
+        ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--syringe-marking').trim();
+        ctx.lineWidth = 0.8;
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--text-secondary').trim();
+        ctx.font = '10px "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        
+        for (let i = 0; i <= maxUI; i++) {
+            const x = (i / maxUI) * width;
+            if (x < 0 || x > width) continue;
+            let tickHeight = 6;
+            let isMajor = (i % 5 === 0);
+            if (isMajor) tickHeight = 12;
+            if (i === 0 || i === maxUI) tickHeight = 14;
+            
+            ctx.beginPath();
+            ctx.moveTo(x, height - tickHeight);
+            ctx.lineTo(x, height);
+            ctx.stroke();
+            
+            if (isMajor && i > 0 && i < maxUI) {
+                ctx.fillText(i.toString(), x, height - tickHeight - 2);
+            }
+            if (i === 0) {
+                ctx.fillText('0', x + 2, height - tickHeight - 2);
+            }
+            if (i === maxUI) {
+                ctx.fillText(maxUI.toString(), x - 6, height - tickHeight - 2);
+            }
+        }
+        
+        // Seta vermelha apontando para baixo, posicionada acima da escala
+        if (valueUI > 0 && valueUI < maxUI) {
+            const markX = (valueUI / maxUI) * width;
+            ctx.fillStyle = '#e74c3c';
+            ctx.strokeStyle = '#c0392b';
+            ctx.lineWidth = 1.5;
+            const arrowSize = 10;
+            const arrowY = 12; // topo da seringa
+            ctx.beginPath();
+            ctx.moveTo(markX - arrowSize/2, arrowY);
+            ctx.lineTo(markX, arrowY + arrowSize);
+            ctx.lineTo(markX + arrowSize/2, arrowY);
+            ctx.fill();
+            ctx.stroke();
+            // Linha guia pontilhada (opcional)
+            ctx.beginPath();
+            ctx.moveTo(markX, arrowY + arrowSize);
+            ctx.lineTo(markX, height - 14);
+            ctx.setLineDash([4, 6]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+    }
+
+    function updateSyringeVisualization(uiValue, maxUI) {
+        if (!syringeContainer) return;
+        if (maxUI <= 0 || uiValue < 0) {
+            syringeContainer.innerHTML = '';
+            return;
+        }
+        const percent = Math.min(100, Math.max(0, (uiValue / maxUI) * 100));
+        const html = `
+            <div class="syringe-container">
+                <div class="syringe-label">
+                    <span>Seringa U-100 (${maxUI} UI)</span>
+                    <span>${uiValue.toFixed(1)} UI / ${maxUI} UI (${percent.toFixed(1)}%)</span>
+                </div>
+                <div class="syringe-canvas-wrapper">
+                    <canvas id="syringeCanvas" style="width: 100%; height: auto; min-width: 200px;"></canvas>
+                </div>
+                <div class="ui-info">
+                    Indicação: aspirar até a marca ${uiValue.toFixed(1)} unidades (seta vermelha).
+                </div>
+            </div>
+        `;
+        syringeContainer.innerHTML = html;
+        const canvas = document.getElementById('syringeCanvas');
+        if (canvas) {
+            setTimeout(() => drawSyringe(canvas, maxUI, uiValue), 10);
+            window.addEventListener('resize', () => drawSyringe(canvas, maxUI, uiValue));
+        }
     }
 
     function updateCalculation() {
         const frascoMg = getFrascoMg();
         const diluenteMl = getDiluenteMl();
         const seringaCapMl = getSeringaCapMl();
+        const seringaCapUI = getSeringaCapUI();
         const doseMg = getDoseMg();
 
         let errorMsg = '';
@@ -637,7 +796,7 @@
                 units = volumeMl * 100;
             }
             if (volumeMl > seringaCapMl + 0.0001) {
-                errorMsg = `O volume aspirado (${volumeMl.toFixed(3)} mL = ${units.toFixed(1)} UI) excede a capacidade da seringa de ${seringaCapMl} mL (${seringaCapMl*100} UI). Utilize seringa maior ou reduza a dose.`;
+                errorMsg = `O volume aspirado (${volumeMl.toFixed(3)} mL = ${units.toFixed(1)} UI) excede a capacidade da seringa de ${seringaCapMl} mL (${seringaCapUI} UI). Utilize seringa maior ou reduza a dose.`;
                 isValid = false;
             }
         }
@@ -648,13 +807,14 @@
                 <div class="error-msg">${errorMsg}</div>
                 <div class="info-conc">Concentração: ${frascoMg > 0 && diluenteMl > 0 ? (frascoMg/diluenteMl).toFixed(2) : '?'} mg/mL</div>
             `;
+            if (syringeContainer) syringeContainer.innerHTML = '';
             return;
         }
 
         const volumeFixed = volumeMl.toFixed(3);
         const unitsFixed = units.toFixed(1);
         const concFixed = concentracao.toFixed(2);
-        const seringaUnitsCap = seringaCapMl * 100;
+        const seringaUnitsCap = seringaCapUI;
         let warningPrecision = '';
         if (volumeMl > 0 && volumeMl < 0.01) {
             warningPrecision = '<div class="error-msg" style="background: var(--error-bg); border-left-color: #e6a017;">Volume muito pequeno (menor que 0,01 mL). Verifique a precisão da seringa.</div>';
@@ -683,6 +843,8 @@
             </div>
             ${warningPrecision}
         `;
+        
+        updateSyringeVisualization(units, seringaUnitsCap);
     }
 
     function buildReferenceScale() {
@@ -711,29 +873,21 @@
         doseCustomInput.addEventListener('change', () => updateCalculation());
     }
 
-    // ========== TEMA CLARO/ESCURO ==========
     function initTheme() {
         const storedTheme = localStorage.getItem('theme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const isDark = storedTheme === 'dark' || (!storedTheme && prefersDark);
-        if (isDark) {
-            document.body.classList.add('dark');
-        } else {
-            document.body.classList.remove('dark');
-        }
+        if (isDark) document.body.classList.add('dark');
+        else document.body.classList.remove('dark');
         updateThemeButtonText();
     }
 
     function updateThemeButtonText() {
         const isDark = document.body.classList.contains('dark');
         const themeIconSpan = document.getElementById('themeIcon');
-        if (themeIconSpan) {
-            themeIconSpan.textContent = isDark ? '☀️' : '🌙';
-        }
+        if (themeIconSpan) themeIconSpan.textContent = isDark ? '☀️' : '🌙';
         const btn = document.getElementById('themeToggle');
-        if (btn) {
-            btn.innerHTML = isDark ? '<span id="themeIcon">☀️</span> Modo claro' : '<span id="themeIcon">🌙</span> Modo escuro';
-        }
+        if (btn) btn.innerHTML = isDark ? '<span id="themeIcon">☀️</span> Modo claro' : '<span id="themeIcon">🌙</span> Modo escuro';
     }
 
     function toggleTheme() {
@@ -745,15 +899,14 @@
             localStorage.setItem('theme', 'dark');
         }
         updateThemeButtonText();
+        updateCalculation();
     }
 
-    // Inicialização completa
     function init() {
         buildDoseButtons();
         buildReferenceScale();
         toggleFrascoCustomPanel();
         toggleDiluenteCustomPanel();
-        // valores padrão
         const defaultFrasco = document.querySelector('input[name="frascoOption"][value="5"]');
         if (defaultFrasco) defaultFrasco.checked = true;
         const defaultDiluente = document.querySelector('input[name="diluenteOption"][value="0.5"]');

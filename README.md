@@ -16,4 +16,4 @@ Desenvolvido para profissionais da saúde e estudantes.
 Se encontrar algum problema ou tiver sugestão, abra uma issue no repositório.
 
 Link para acessar a calculadora online:
-https://enfgabriel.github.io/calculadora-reconstituicao/
+[https://enfgabriel.github.io/calculadora-reconstituicao/](https://github.com/enfgabriel/calculadora-reconstituicao)

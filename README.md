@@ -2,6 +2,8 @@
 
 Aplicação web leve, responsiva e sem dependências externas para apoio à conferência de cálculos de enfermagem.
 
+Inclui temas claro, escuro e alto contraste, com preferência salva no navegador.
+
 ## Módulos
 
 - **Reconstituição e aspiração:** concentração, volume e marca em seringas U-100, U-40 ou graduadas em mL (1, 3, 5, 10, 20 e 60 mL).

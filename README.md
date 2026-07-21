@@ -8,6 +8,7 @@ Aplicação web leve, responsiva e sem dependências externas para apoio à conf
 - **Gotejamento:** gotas ou microgotas por minuto a partir do volume, tempo e fator informado no equipo.
 - **Bomba de infusão:** duração estimada a partir do volume e da velocidade em mL/h.
 - **Dose por peso:** dose total e volume a partir de uma prescrição em mg/kg, com campo opcional para limite máximo já prescrito/protocolar.
+- **Oxigenoterapia:** autonomia estimada de cilindro em fluxo contínuo, com pressão, reserva, volume interno e fluxo informados pelo profissional.
 
 ## Princípios de segurança
 
@@ -27,6 +28,8 @@ mL/h = volume / tempo em horas
 tempo de bomba = volume / velocidade
 dose total = mg/kg prescritos × peso
 volume da dose = dose total / concentração disponível
+oxigênio útil (L) = (pressão atual − reserva) × volume interno do cilindro
+autonomia (min) = oxigênio útil / fluxo total em L/min
 ```
 
 ## Executar e testar

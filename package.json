@@ -1,0 +1,8 @@
+{
+  "name": "reconstitui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node calculator.test.mjs"
+  }
+}

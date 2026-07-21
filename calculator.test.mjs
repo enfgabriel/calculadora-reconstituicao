@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { calculateReconstitution, calculateDose, calculateDrip, calculatePump, calculateWeightDose } from './calculator.js';
+import { calculateReconstitution, calculateDose, calculateDrip, calculatePump, calculateWeightDose, calculateOxygenDuration } from './calculator.js';
 
 const u100 = calculateReconstitution({ vialMg: 5, finalVolumeMl: 0.5, doseMg: 0.25, scalePerMl: 100, syringeCapacity: 100, syringeIncrement: 0.5 });
 assert.equal(u100.concentrationMgMl, 10); assert.equal(u100.volumeMl, 0.025); assert.equal(u100.scaleValue, 2.5); assert.deepEqual(u100.warnings, []);
@@ -26,4 +26,8 @@ assert.equal(weight.doseMg, 200); assert.equal(weight.volumeMl, 2); assert.ok(we
 
 assert.equal(calculateDrip({ volumeMl: 0, hours: 1, dropFactor: 20 }).ok, false);
 assert.equal(calculatePump({ volumeMl: 100, rateMlHour: 0 }).ok, false);
+const oxygen = calculateOxygenDuration({ pressureBar: 150, reserveBar: 20, cylinderWaterVolumeL: 5, flowLMin: 5 });
+assert.equal(oxygen.usableOxygenL, 650); assert.equal(oxygen.totalMinutes, 130); assert.equal(oxygen.wholeHours, 2); assert.equal(oxygen.remainingMinutes, 10);
+assert.ok(calculateOxygenDuration({ pressureBar: 50, reserveBar: 20, cylinderWaterVolumeL: 2, flowLMin: 5 }).warnings.includes('critical_duration'));
+assert.equal(calculateOxygenDuration({ pressureBar: 20, reserveBar: 20, cylinderWaterVolumeL: 5, flowLMin: 5 }).ok, false);
 console.log('Todos os testes da central de cálculos passaram.');

@@ -57,6 +57,18 @@ export function calculateWeightDose({ prescribedMgKg, weightKg, availableMg, ava
   return { ok: true, doseMg, concentrationMgMl, volumeMl, warnings };
 }
 
+export function calculateOxygenDuration({ pressureBar, reserveBar, cylinderWaterVolumeL, flowLMin }) {
+  if (!finite(pressureBar, reserveBar, cylinderWaterVolumeL, flowLMin)) return { ok: false, code: 'invalid_number' };
+  if (!positive(pressureBar, cylinderWaterVolumeL, flowLMin) || reserveBar < 0 || reserveBar >= pressureBar) return { ok: false, code: 'invalid_range' };
+  const usablePressureBar = pressureBar - reserveBar;
+  const usableOxygenL = usablePressureBar * cylinderWaterVolumeL;
+  const totalMinutes = usableOxygenL / flowLMin;
+  const warnings = [];
+  if (totalMinutes < 30) warnings.push('critical_duration');
+  else if (totalMinutes < 60) warnings.push('short_duration');
+  return { ok: true, usablePressureBar, usableOxygenL, totalMinutes, wholeHours: Math.floor(totalMinutes / 60), remainingMinutes: Math.floor(totalMinutes % 60), warnings };
+}
+
 export function formatPt(value, maximumFractionDigits = 3) {
   return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits }).format(value);
 }

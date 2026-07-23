@@ -69,6 +69,30 @@ export function calculateOxygenDuration({ pressureBar, reserveBar, cylinderWater
   return { ok: true, usablePressureBar, usableOxygenL, totalMinutes, wholeHours: Math.floor(totalMinutes / 60), remainingMinutes: Math.floor(totalMinutes % 60), warnings };
 }
 
+export function calculateCompoundLiquid({ mode, amount, dropsPerMl = null, targetComponentIndex = 0, components = [] }) {
+  const activeComponents = components
+    .map((component, index) => ({ ...component, index, concentrationMgMl: Number(component.concentrationMgMl) }))
+    .filter(component => component.name && Number.isFinite(component.concentrationMgMl) && component.concentrationMgMl > 0);
+  if (!finite(amount) || amount <= 0 || activeComponents.length === 0) return { ok: false, code: 'invalid_range' };
+  if ((mode === 'drops' || mode === 'target') && (!Number.isFinite(dropsPerMl) || dropsPerMl <= 0)) return { ok: false, code: 'invalid_range' };
+
+  let volumeMl = amount;
+  if (mode === 'drops') volumeMl = amount / dropsPerMl;
+  if (mode === 'target') {
+    const target = activeComponents.find(component => component.index === targetComponentIndex) || activeComponents[0];
+    volumeMl = amount / target.concentrationMgMl;
+  }
+  if (!Number.isFinite(volumeMl) || volumeMl <= 0) return { ok: false, code: 'invalid_range' };
+
+  const drops = Number.isFinite(dropsPerMl) && dropsPerMl > 0 ? volumeMl * dropsPerMl : null;
+  const delivered = activeComponents.map(component => ({
+    name: component.name,
+    concentrationMgMl: component.concentrationMgMl,
+    doseMg: component.concentrationMgMl * volumeMl
+  }));
+  return { ok: true, mode, volumeMl, drops, delivered };
+}
+
 export function formatPt(value, maximumFractionDigits = 3) {
   return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits }).format(value);
 }

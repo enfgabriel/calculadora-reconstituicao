@@ -11,6 +11,7 @@ Inclui temas claro, escuro e alto contraste, com preferência salva no navegador
 - **Bomba de infusão:** duração estimada a partir do volume e da velocidade em mL/h.
 - **Dose por peso:** dose total e volume a partir de uma prescrição em mg/kg, com campo opcional para limite máximo já prescrito/protocolar.
 - **Oxigenoterapia:** autonomia estimada de cilindro em fluxo contínuo, com pressão, reserva, volume interno e fluxo informados pelo profissional.
+- **Compostos líquidos:** converte dose alvo, gotas ou mL em volume a aspirar e mostra os mg entregues por componente.
 
 ## Princípios de segurança
 
@@ -32,6 +33,9 @@ dose total = mg/kg prescritos × peso
 volume da dose = dose total / concentração disponível
 oxigênio útil (L) = (pressão atual − reserva) × volume interno do cilindro
 autonomia (min) = oxigênio útil / fluxo total em L/min
+volume do composto = dose alvo do componente / concentração em mg/mL
+dose entregue do componente = volume em mL × concentração em mg/mL
+volume em mL = gotas / gotas por mL
 ```
 
 ## Executar e testar

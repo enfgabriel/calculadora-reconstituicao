@@ -36,5 +36,10 @@ const compoundDrops = calculateCompoundLiquid({ mode: 'drops', amount: 20, drops
 assert.equal(compoundDrops.volumeMl, 1); assert.equal(compoundDrops.delivered[0].doseMg, 6.67);
 const compoundMl = calculateCompoundLiquid({ mode: 'ml', amount: 2, components: [{ name: 'A', concentrationMgMl: 10 }, { name: 'B', concentrationMgMl: 25 }] });
 assert.equal(compoundMl.delivered[0].doseMg, 20); assert.equal(compoundMl.delivered[1].doseMg, 50);
+const compoundDiluted = calculateCompoundLiquid({ mode: 'target', amount: 4, dropsPerMl: 20, targetComponentIndex: 0, preparation: 'diluted', sourceVolumeMl: 2, finalVolumeMl: 10, components: [{ name: 'Componente A', unit: 'mg', concentrationPerMl: 10 }, { name: 'Componente B', unit: 'mcg', concentrationPerMl: 100 }] });
+assert.equal(compoundDiluted.volumeMl, 2); assert.equal(compoundDiluted.delivered[0].dose, 4); assert.equal(compoundDiluted.delivered[1].dose, 40); assert.equal(compoundDiluted.delivered[1].unit, 'mcg');
+const compoundUi = calculateCompoundLiquid({ mode: 'ml', amount: 0.5, components: [{ name: 'Insulina regular', unit: 'UI', concentrationPerMl: 100 }] });
+assert.equal(compoundUi.delivered[0].dose, 50); assert.equal(compoundUi.delivered[0].unit, 'UI');
+assert.equal(calculateCompoundLiquid({ mode: 'ml', amount: 1, preparation: 'diluted', sourceVolumeMl: 5, finalVolumeMl: 2, components: [{ name: 'A', concentrationPerMl: 10 }] }).ok, false);
 assert.equal(calculateCompoundLiquid({ mode: 'ml', amount: 1, components: [] }).ok, false);
 console.log('Todos os testes da central de cálculos passaram.');

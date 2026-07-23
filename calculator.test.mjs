@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { calculateReconstitution, calculateDose, calculateDrip, calculatePump, calculateWeightDose, calculateOxygenDuration } from './calculator.js';
+import { calculateReconstitution, calculateDose, calculateDrip, calculatePump, calculateWeightDose, calculateOxygenDuration, calculateCompoundLiquid } from './calculator.js';
 
 const u100 = calculateReconstitution({ vialMg: 5, finalVolumeMl: 0.5, doseMg: 0.25, scalePerMl: 100, syringeCapacity: 100, syringeIncrement: 0.5 });
 assert.equal(u100.concentrationMgMl, 10); assert.equal(u100.volumeMl, 0.025); assert.equal(u100.scaleValue, 2.5); assert.deepEqual(u100.warnings, []);
@@ -30,4 +30,11 @@ const oxygen = calculateOxygenDuration({ pressureBar: 150, reserveBar: 20, cylin
 assert.equal(oxygen.usableOxygenL, 650); assert.equal(oxygen.totalMinutes, 130); assert.equal(oxygen.wholeHours, 2); assert.equal(oxygen.remainingMinutes, 10);
 assert.ok(calculateOxygenDuration({ pressureBar: 50, reserveBar: 20, cylinderWaterVolumeL: 2, flowLMin: 5 }).warnings.includes('critical_duration'));
 assert.equal(calculateOxygenDuration({ pressureBar: 20, reserveBar: 20, cylinderWaterVolumeL: 5, flowLMin: 5 }).ok, false);
+const compoundTarget = calculateCompoundLiquid({ mode: 'target', amount: 3.335, dropsPerMl: 20, targetComponentIndex: 0, components: [{ name: 'Escopolamina', concentrationMgMl: 6.67 }, { name: 'Dipirona', concentrationMgMl: 333.4 }] });
+assert.equal(compoundTarget.volumeMl, 0.5); assert.equal(compoundTarget.drops, 10); assert.equal(compoundTarget.delivered[1].doseMg, 166.7);
+const compoundDrops = calculateCompoundLiquid({ mode: 'drops', amount: 20, dropsPerMl: 20, components: [{ name: 'Escopolamina', concentrationMgMl: 6.67 }, { name: 'Dipirona', concentrationMgMl: 333.4 }] });
+assert.equal(compoundDrops.volumeMl, 1); assert.equal(compoundDrops.delivered[0].doseMg, 6.67);
+const compoundMl = calculateCompoundLiquid({ mode: 'ml', amount: 2, components: [{ name: 'A', concentrationMgMl: 10 }, { name: 'B', concentrationMgMl: 25 }] });
+assert.equal(compoundMl.delivered[0].doseMg, 20); assert.equal(compoundMl.delivered[1].doseMg, 50);
+assert.equal(calculateCompoundLiquid({ mode: 'ml', amount: 1, components: [] }).ok, false);
 console.log('Todos os testes da central de cálculos passaram.');

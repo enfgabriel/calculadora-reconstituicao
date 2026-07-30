@@ -46,27 +46,51 @@ export function calculatePump({ volumeMl, rateMlHour }) {
   return { ok: true, durationHours, totalMinutes, wholeHours: Math.floor(totalMinutes / 60), remainingMinutes: Math.round(totalMinutes % 60) };
 }
 
-export function calculateWeightDose({ prescribedMgKg, weightKg, availableMg, availableVolumeMl, maxDoseMg = null }) {
+export function calculateWeightDose({ prescribedMgKg, weightKg, availableMg, availableVolumeMl, maxDoseMg = null, regimen = 'single', dosesPerDay = 1 }) {
   if (!finite(prescribedMgKg, weightKg, availableMg, availableVolumeMl)) return { ok: false, code: 'invalid_number' };
   if (!positive(prescribedMgKg, weightKg, availableMg, availableVolumeMl)) return { ok: false, code: 'invalid_range' };
-  const doseMg = prescribedMgKg * weightKg;
+  const divisions = Number(dosesPerDay);
+  if (regimen === 'daily' && (!Number.isFinite(divisions) || divisions <= 0)) return { ok: false, code: 'invalid_range' };
+  const dailyDoseMg = prescribedMgKg * weightKg;
+  const doseMg = regimen === 'daily' ? dailyDoseMg / divisions : dailyDoseMg;
   const concentrationMgMl = availableMg / availableVolumeMl;
   const volumeMl = doseMg / concentrationMgMl;
   const warnings = [];
   if (maxDoseMg !== null && Number.isFinite(maxDoseMg) && maxDoseMg > 0 && doseMg > maxDoseMg) warnings.push('exceeds_max_dose');
-  return { ok: true, doseMg, concentrationMgMl, volumeMl, warnings };
+  if (volumeMl > 0 && volumeMl < 0.1) warnings.push('very_small_volume');
+  return { ok: true, regimen, doseMg, dailyDoseMg, dosesPerDay: regimen === 'daily' ? divisions : 1, concentrationMgMl, volumeMl, warnings };
 }
 
-export function calculateOxygenDuration({ pressureBar, reserveBar, cylinderWaterVolumeL, flowLMin }) {
+export function calculateWeightInfusion({ prescribedMcgKgMin, weightKg, availableMg, availableVolumeMl }) {
+  if (!finite(prescribedMcgKgMin, weightKg, availableMg, availableVolumeMl)) return { ok: false, code: 'invalid_number' };
+  if (!positive(prescribedMcgKgMin, weightKg, availableMg, availableVolumeMl)) return { ok: false, code: 'invalid_range' };
+  const doseMcgMin = prescribedMcgKgMin * weightKg;
+  const doseMgHour = doseMcgMin * 60 / 1000;
+  const concentrationMgMl = availableMg / availableVolumeMl;
+  const mlHour = doseMgHour / concentrationMgMl;
+  const warnings = [];
+  if (mlHour > 0 && mlHour < 0.1) warnings.push('very_low_rate');
+  return { ok: true, doseMcgMin, doseMgHour, concentrationMgMl, mlHour, warnings };
+}
+
+export function calculateOxygenDuration({ pressureBar, reserveBar, cylinderWaterVolumeL, flowLMin, plannedMinutes = null, safetyMarginPercent = 0 }) {
   if (!finite(pressureBar, reserveBar, cylinderWaterVolumeL, flowLMin)) return { ok: false, code: 'invalid_number' };
   if (!positive(pressureBar, cylinderWaterVolumeL, flowLMin) || reserveBar < 0 || reserveBar >= pressureBar) return { ok: false, code: 'invalid_range' };
+  const plan = Number(plannedMinutes);
+  const margin = Number(safetyMarginPercent);
+  if (plannedMinutes !== null && plannedMinutes !== '' && (!Number.isFinite(plan) || plan < 0)) return { ok: false, code: 'invalid_range' };
+  if (!Number.isFinite(margin) || margin < 0) return { ok: false, code: 'invalid_range' };
   const usablePressureBar = pressureBar - reserveBar;
   const usableOxygenL = usablePressureBar * cylinderWaterVolumeL;
   const totalMinutes = usableOxygenL / flowLMin;
+  const requiredMinutes = Number.isFinite(plan) && plan > 0 ? plan * (1 + margin / 100) : null;
+  const requiredOxygenL = requiredMinutes === null ? null : requiredMinutes * flowLMin;
+  const remainingAfterPlanMinutes = requiredMinutes === null ? null : totalMinutes - requiredMinutes;
   const warnings = [];
   if (totalMinutes < 30) warnings.push('critical_duration');
   else if (totalMinutes < 60) warnings.push('short_duration');
-  return { ok: true, usablePressureBar, usableOxygenL, totalMinutes, wholeHours: Math.floor(totalMinutes / 60), remainingMinutes: Math.floor(totalMinutes % 60), warnings };
+  if (requiredMinutes !== null && remainingAfterPlanMinutes < 0) warnings.push('insufficient_for_plan');
+  return { ok: true, usablePressureBar, usableOxygenL, totalMinutes, wholeHours: Math.floor(totalMinutes / 60), remainingMinutes: Math.floor(totalMinutes % 60), plannedMinutes: Number.isFinite(plan) ? plan : null, safetyMarginPercent: margin, requiredMinutes, requiredOxygenL, remainingAfterPlanMinutes, warnings };
 }
 
 export function calculateCompoundLiquid({

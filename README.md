@@ -11,7 +11,7 @@ Inclui temas claro, escuro, alto contraste e modo plantão, com preferência sal
 - **Bomba de infusão:** duração estimada a partir do volume e da velocidade em mL/h.
 - **Dose por peso:** dose por aplicação, dose diária dividida ou mcg/kg/min em bomba, com volume/velocidade conforme a concentração disponível.
 - **Oxigenoterapia:** autonomia estimada do cilindro, tempo planejado, margem operacional e alerta de insuficiência para transporte/procedimento.
-- **Compostos líquidos:** converte dose alvo, gotas ou mL em volume a aspirar/administrar, com unidade por componente, via selecionada, preparo direto/diluído e apresentações salvas editáveis.
+- **Compostos líquidos:** modo rápido para apresentação + prescrição + resultado em mL/gotas, com modo avançado para conferir componentes, via, preparo direto/diluído e apresentações salvas editáveis.
 
 ## Princípios de segurança
 

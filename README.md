@@ -11,7 +11,7 @@ Inclui temas claro, escuro, alto contraste e modo plantão, com preferência sal
 - **Bomba de infusão:** duração estimada a partir do volume e da velocidade em mL/h.
 - **Dose por peso:** dose por aplicação, dose diária dividida ou mcg/kg/min em bomba, com volume/velocidade conforme a concentração disponível.
 - **Oxigenoterapia:** autonomia estimada do cilindro, tempo planejado, margem operacional e alerta de insuficiência para transporte/procedimento.
-- **Compostos líquidos:** modo rápido para apresentação + prescrição + resultado em mL/gotas, com modo avançado para conferir componentes, via, preparo direto/diluído e apresentações salvas editáveis.
+- **Compostos / reconstituição rápida:** informa mg total do frasco, volume final após diluente/reconstituição e prescrição em mg para obter rapidamente o volume em mL.
 
 ## Princípios de segurança
 
@@ -19,7 +19,7 @@ Inclui temas claro, escuro, alto contraste e modo plantão, com preferência sal
 - Escalas U-100/U-40 são apresentadas separadamente de seringas graduadas em mL.
 - Em U-100, o app reforça que a marcação da seringa não é a unidade terapêutica do medicamento.
 - O fator de gotejamento deve ser conferido no rótulo do equipo.
-- Apresentações salvas em compostos são atalhos editáveis: confirme sempre bula/frasco e protocolo.
+- Em compostos/reconstituição rápida, confirme sempre o volume final real após diluição, bula/frasco, prescrição e protocolo.
 - Resultados não substituem dupla checagem, bula, prescrição ou protocolo institucional.
 
 ## Fórmulas
@@ -38,7 +38,7 @@ mL/h = (mcg/kg/min × peso × 60 / 1000) / concentração em mg/mL
 oxigênio útil (L) = (pressão atual − reserva) × volume interno do cilindro
 autonomia (min) = oxigênio útil / fluxo total em L/min
 tempo planejado com margem = tempo necessário × (1 + margem%)
-volume do composto = dose alvo do componente / concentração final por mL
+volume em mL = prescrição em mg / concentração final em mg/mL
 dose entregue do componente = volume em mL × concentração final por mL
 concentração final diluída = concentração original × volume usado / volume final
 volume em mL = gotas / gotas por mL

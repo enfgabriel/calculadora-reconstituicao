@@ -106,9 +106,9 @@ select, .field > input[type="text"] { width: 100%; min-height: 46px; padding: .6
 .compound-components dd small { display:block; margin-top:.25rem; color:var(--muted); font-size:.68rem; font-weight:650; }
 .u100-note:empty { display:none; }
 .u100-note { margin-top:.75rem; border-left-color:var(--warning); color:var(--ink); font-weight:750; }
-.recon-final-read { grid-template-columns:repeat(2,1fr); margin-top:.75rem; }
-.recon-final-read .recon-final-line { grid-column:1/-1; border-color:var(--brand); background:var(--brand-soft); }
-.recon-final-read .recon-final-line dd { color:var(--brand-strong); font-size:1rem; }
+.recon-final-read,.final-read { grid-template-columns:repeat(2,1fr); margin-top:.75rem; }
+.recon-final-read .recon-final-line,.final-read .final-line { grid-column:1/-1; border-color:var(--brand); background:var(--brand-soft); }
+.recon-final-read .recon-final-line dd,.final-read .final-line dd { color:var(--brand-strong); font-size:1rem; }
 .copy-record { margin-top:.85rem; }
 .copy-feedback { margin-top:.45rem; color:var(--muted); font-size:.7rem; }
 .duty-toggle[aria-pressed="true"] { color:var(--brand-strong); border-color:var(--brand); background:var(--brand-soft); }

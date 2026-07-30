@@ -1,4 +1,4 @@
-import { calculateReconstitution, calculateDrip, calculatePump, calculateWeightDose, calculateWeightInfusion, calculateOxygenDuration, calculateCompoundLiquid, formatPt } from './calculator.js?v=13';
+import { calculateReconstitution, calculateDrip, calculatePump, calculateWeightDose, calculateWeightInfusion, calculateOxygenDuration, calculateCompoundReconstitution, formatPt } from './calculator.js?v=14';
 const $ = s => document.querySelector(s); const $$ = s => [...document.querySelectorAll(s)]; const num = s => Number($(s).value);
 
 const devices = {
@@ -77,12 +77,6 @@ function renderOxygen(){
   currentRecordText=`Oxigenoterapia: pressão ${formatPt(num('#oxygenPressure'),1)} bar; reserva ${formatPt(num('#oxygenReserve'),1)} bar; cilindro ${formatPt(num('#cylinderVolume'),2)} L; fluxo total ${formatPt(num('#oxygenFlow'),2)} L/min. Autonomia estimada ${formatPt(r.totalMinutes,0)} min.${r.requiredMinutes?` Tempo planejado com margem: ${formatPt(r.requiredMinutes,0)} min; saldo ${formatPt(r.remainingAfterPlanMinutes,0)} min.`:''} ${dutyChecklist}`;
 }
 
-const compoundPresets = {
-  custom:null,
-  buscopanDrops:{ label:'Buscopan Composto gotas (exemplo)', drops:20, route:'oral', components:[['Escopolamina','mg',6.67],['Dipirona','mg',333.4],['','mg',0],['','mg',0]] },
-  buscopanAmpoule:{ label:'Buscopan Composto ampola (exemplo)', drops:20, route:'ivDirect', components:[['Escopolamina','mg',4],['Dipirona','mg',500],['','mg',0],['','mg',0]] },
-  dipyroneDrops:{ label:'Dipirona gotas (exemplo)', drops:20, route:'oral', components:[['Dipirona','mg',500],['','mg',0],['','mg',0],['','mg',0]] }
-};
 function enhanceShiftTools(){
   if($('#dutyToggle')) return;
   $('.topbar').insertAdjacentHTML('beforeend','<button class="icon-button duty-toggle" id="dutyToggle" type="button" aria-pressed="false"><span aria-hidden="true">✓</span><span class="theme-label">Plantão</span></button>');
@@ -93,7 +87,7 @@ function enhanceShiftTools(){
   $('#pumpSummary').insertAdjacentHTML('beforebegin','<dl class="result-details final-read"><div><dt>Volume a infundir</dt><dd id="pumpVolumeRead">500 mL</dd></div><div><dt>Velocidade</dt><dd id="pumpRateRead">125 mL/h</dd></div><div><dt>Tempo total</dt><dd id="pumpTotalRead">240 min</dd></div><div class="final-line"><dt>Resultado final</dt><dd id="pumpFinalReadResult">4 h</dd></div></dl>');
   $('#weightSummary').insertAdjacentHTML('beforebegin','<dl class="result-details final-read"><div><dt>Prescrição / peso</dt><dd id="weightPrescriptionRead">10 mg/kg · 20 kg</dd></div><div><dt>Apresentação</dt><dd id="weightPresentationRead">500 mg/5 mL</dd></div><div><dt>Dose calculada</dt><dd id="weightDoseRead">200 mg</dd></div><div class="final-line"><dt>Resultado final</dt><dd id="weightFinalReadResult">Administrar 2 mL</dd></div></dl>');
   $('#oxygenSummary').insertAdjacentHTML('beforebegin','<dl class="result-details final-read"><div><dt>Pressão / reserva</dt><dd id="oxygenPressureRead">150 / 20 bar</dd></div><div><dt>Cilindro / fluxo</dt><dd id="oxygenFlowRead">5 L · 5 L/min</dd></div><div><dt>Plano</dt><dd id="oxygenPlanRead">60 min + 20%</dd></div><div class="final-line"><dt>Resultado final</dt><dd id="oxygenFinalReadResult">2 h 10 min</dd></div></dl>');
-  $('#compoundSummary').insertAdjacentHTML('beforebegin','<dl class="result-details final-read"><div><dt>Apresentação / via</dt><dd id="compoundPresentationRead">Personalizada · oral</dd></div><div><dt>Preparo</dt><dd id="compoundPrepRead">Direto</dd></div><div><dt>Componente guia</dt><dd id="compoundGuideRead">Escopolamina</dd></div><div class="final-line"><dt>Resultado final</dt><dd id="compoundFinalReadResult">Administrar/aspirar 0,5 mL</dd></div></dl>');
+  $('#compoundSummary').insertAdjacentHTML('beforebegin','<dl class="result-details final-read"><div><dt>Concentração</dt><dd id="compoundConcentrationRead">100 mg/mL</dd></div><div><dt>Frasco reconstituído</dt><dd id="compoundVialRead">500 mg em 5 mL</dd></div><div><dt>Dose prescrita</dt><dd id="compoundDoseRead">250 mg</dd></div><div class="final-line"><dt>Resultado final</dt><dd id="compoundFinalReadResult">Aspirar 2,5 mL</dd></div></dl>');
   $('#dutyToggle').addEventListener('click',()=>{ const active=!document.documentElement.classList.contains('duty-mode'); document.documentElement.classList.toggle('duty-mode',active); $('#dutyToggle').setAttribute('aria-pressed',String(active)); });
   $$('.copy-record').forEach(button=>button.addEventListener('click',async()=>{ const text=currentRecordText||$('.tool-panel.active .calculation-note')?.textContent||''; try{ await navigator.clipboard.writeText(text); button.nextElementSibling.textContent='Registro copiado para a área de transferência.'; }catch{ button.nextElementSibling.textContent=text; } }));
 }
@@ -181,6 +175,35 @@ function renderCompound(){
   currentRecordText=`Composto líquido: administrar/aspirar ${formatPt(r.volumeMl,3)} mL${r.drops!==null?` (${formatPt(r.drops,1)} gotas)`:''}. ${prep} Via: ${routeLabels[route]}. Componentes: ${r.delivered.map(c=>`${c.name} ${formatPt(c.dose,3)} ${c.unit}`).join('; ')}. ${dutyChecklist}`;
 }
 
+function enhanceCompoundSimple(){
+  if($('#compoundVialMg')) return;
+  setText('#compoundsTitle','Compostos / reconstituição rápida');
+  const heading=$('#compounds .panel-heading p'); if(heading) heading.textContent='Informe o total do frasco, o volume final após diluir/reconstituir e a dose prescrita para obter o mL a aspirar.';
+  const chip=$('#compounds .formula-chip'); if(chip) chip.textContent='mg ÷ mg/mL = mL';
+  $('#compoundForm').innerHTML='<div class="compound-quick-intro"><strong>Cálculo rápido de frasco</strong><span>Use quando a prescrição vem em mg e você precisa converter para mL após reconstituição/diluição.</span></div><div class="field"><label for="compoundVialMg">Mg total do frasco</label><div class="input-unit input-unit-large"><input id="compoundVialMg" type="number" min="0.001" step="any" value="500"><span>mg</span></div></div><div class="field"><label for="compoundDiluentMl">Volume do diluente / volume final</label><div class="input-unit input-unit-large"><input id="compoundDiluentMl" type="number" min="0.001" step="any" value="5"><span>mL</span></div></div><div class="field"><label for="compoundDoseMg">Prescrição médica</label><div class="input-unit input-unit-large"><input id="compoundDoseMg" type="number" min="0" step="any" value="250"><span>mg</span></div></div><div class="context-note">Resultado de apoio: confira prescrição, diluente indicado, volume final real do frasco, via e protocolo institucional.</div><button class="secondary-button" type="submit">Calcular mL</button>';
+  const primary=$('#compoundVolumeResult')?.closest('.primary-result'); if(primary) primary.querySelector('span').textContent='VOLUME A ASPIRAR';
+  const details=primary?.nextElementSibling; if(details) details.innerHTML='<div><dt>Concentração final</dt><dd id="compoundConcentrationResult">100 mg/mL</dd></div><div><dt>Uso do frasco</dt><dd id="compoundVialPercentResult">50% do frasco</dd></div>';
+  $('#compoundComponents')?.remove();
+}
+
+function renderCompoundSimple(){
+  const r=calculateCompoundReconstitution({vialMg:num('#compoundVialMg'),diluentMl:num('#compoundDiluentMl'),prescribedMg:num('#compoundDoseMg')});
+  if(!r.ok){ $('#compoundAlerts').innerHTML='<div class="alert alert-error">Revise os campos: informe mg total do frasco, volume final em mL e prescrição em mg.</div>'; return; }
+  const alerts=[];
+  if(r.warnings.includes('dose_exceeds_vial')) alerts.push('<div class="alert alert-error">A prescrição em mg é maior que o total informado no frasco.</div>');
+  if(r.warnings.includes('very_small_volume')) alerts.push('<div class="alert alert-warning">Volume muito pequeno. Confira se a seringa/dispositivo permite medir com segurança.</div>');
+  $('#compoundAlerts').innerHTML=alerts.join('');
+  $('#compoundVolumeResult').textContent=formatPt(r.volumeMl,3);
+  $('#compoundConcentrationResult').textContent=`${formatPt(r.concentrationMgMl,3)} mg/mL`;
+  $('#compoundVialPercentResult').textContent=`${formatPt(r.vialPercent,1)}% do frasco`;
+  setText('#compoundConcentrationRead',`${formatPt(r.concentrationMgMl,3)} mg/mL`);
+  setText('#compoundVialRead',`${formatPt(num('#compoundVialMg'),3)} mg em ${formatPt(num('#compoundDiluentMl'),3)} mL`);
+  setText('#compoundDoseRead',`${formatPt(num('#compoundDoseMg'),3)} mg`);
+  setText('#compoundFinalReadResult',`Aspirar ${formatPt(r.volumeMl,3)} mL`);
+  $('#compoundSummary').textContent=`${formatPt(num('#compoundVialMg'),3)} mg ÷ ${formatPt(num('#compoundDiluentMl'),3)} mL = ${formatPt(r.concentrationMgMl,3)} mg/mL. Prescrição ${formatPt(num('#compoundDoseMg'),3)} mg ÷ ${formatPt(r.concentrationMgMl,3)} mg/mL = ${formatPt(r.volumeMl,3)} mL.`;
+  currentRecordText=`Compostos/reconstituição: frasco ${formatPt(num('#compoundVialMg'),3)} mg; volume final ${formatPt(num('#compoundDiluentMl'),3)} mL; prescrição ${formatPt(num('#compoundDoseMg'),3)} mg; aspirar ${formatPt(r.volumeMl,3)} mL; concentração final ${formatPt(r.concentrationMgMl,3)} mg/mL. ${dutyChecklist}`;
+}
+
 function activateTool(tool, updateHash=true){ const button=$(`[data-tool="${tool}"]`)||$('[data-tool="reconstitution"]'); $$('[data-tool]').forEach(b=>{const active=b===button;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));}); $$('[data-panel]').forEach(p=>{const active=p.id===button.dataset.tool;p.hidden=!active;p.classList.toggle('active',active);}); if(updateHash) history.replaceState(null,'',`#${button.dataset.tool}`); }
 $$('[data-tool]').forEach(button=>button.addEventListener('click',()=>activateTool(button.dataset.tool)));
 window.addEventListener('hashchange',()=>{ const hash=location.hash.slice(1); if(['reconstitution','drip','pump','weight','oxygen','compounds'].includes(hash)) activateTool(hash,false); });
@@ -188,7 +211,7 @@ const oxygenButton=document.createElement('button'); oxygenButton.type='submit';
 enhanceShiftTools();
 enhanceWeightForm();
 enhanceOxygenForm();
-enhanceCompoundForm();
-$('#syringeType').addEventListener('change',setDeviceOptions); $('#reconstitutionForm').addEventListener('input',renderReconstitution); $('#reconstitutionForm').addEventListener('change',renderReconstitution); $('#dripForm').addEventListener('input',renderDrip); $('#dripForm').addEventListener('change',renderDrip); $('#pumpForm').addEventListener('input',renderPump); $('#weightForm').addEventListener('input',renderWeight); $('#weightForm').addEventListener('change',renderWeight); $('#oxygenForm').addEventListener('input',renderOxygen); $('#oxygenForm').addEventListener('change',renderOxygen); $('#oxygenForm').addEventListener('submit',event=>{event.preventDefault();renderOxygen();}); $('#compoundMode').addEventListener('change',syncCompoundMode); $('#compoundForm').addEventListener('input',renderCompound); $('#compoundForm').addEventListener('change',renderCompound); $('#compoundForm').addEventListener('submit',event=>{event.preventDefault();renderCompound();});
+enhanceCompoundSimple();
+$('#syringeType').addEventListener('change',setDeviceOptions); $('#reconstitutionForm').addEventListener('input',renderReconstitution); $('#reconstitutionForm').addEventListener('change',renderReconstitution); $('#dripForm').addEventListener('input',renderDrip); $('#dripForm').addEventListener('change',renderDrip); $('#pumpForm').addEventListener('input',renderPump); $('#weightForm').addEventListener('input',renderWeight); $('#weightForm').addEventListener('change',renderWeight); $('#oxygenForm').addEventListener('input',renderOxygen); $('#oxygenForm').addEventListener('change',renderOxygen); $('#oxygenForm').addEventListener('submit',event=>{event.preventDefault();renderOxygen();}); $('#compoundForm').addEventListener('input',renderCompoundSimple); $('#compoundForm').addEventListener('change',renderCompoundSimple); $('#compoundForm').addEventListener('submit',event=>{event.preventDefault();renderCompoundSimple();});
 const theme=$('#themeToggle'); const themeOrder=['light','dark','contrast']; const themeNames={light:'Claro',dark:'Escuro',contrast:'Alto contraste'}; const themeIcons={light:'☀',dark:'☾',contrast:'◐'}; function setTheme(t){if(!themeOrder.includes(t))t='light';document.documentElement.dataset.theme=t;localStorage.setItem('theme',t);const next=themeOrder[(themeOrder.indexOf(t)+1)%themeOrder.length];theme.setAttribute('aria-pressed',String(t!=='light'));theme.setAttribute('aria-label',`Tema atual: ${themeNames[t]}. Ativar ${themeNames[next]}`);$('#themeIcon').textContent=themeIcons[t];$('.theme-label').textContent=themeNames[t];} theme.addEventListener('click',()=>{const current=document.documentElement.dataset.theme;setTheme(themeOrder[(themeOrder.indexOf(current)+1)%themeOrder.length]);}); setTheme(localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
-setDeviceOptions(); renderDrip(); renderPump(); renderWeight(); renderOxygen(); syncCompoundMode(); const hash=location.hash.slice(1); activateTool(['reconstitution','drip','pump','weight','oxygen','compounds'].includes(hash)?hash:'reconstitution',false);
+setDeviceOptions(); renderDrip(); renderPump(); renderWeight(); renderOxygen(); renderCompoundSimple(); const hash=location.hash.slice(1); activateTool(['reconstitution','drip','pump','weight','oxygen','compounds'].includes(hash)?hash:'reconstitution',false);

@@ -93,69 +93,16 @@ export function calculateOxygenDuration({ pressureBar, reserveBar, cylinderWater
   return { ok: true, usablePressureBar, usableOxygenL, totalMinutes, wholeHours: Math.floor(totalMinutes / 60), remainingMinutes: Math.floor(totalMinutes % 60), plannedMinutes: Number.isFinite(plan) ? plan : null, safetyMarginPercent: margin, requiredMinutes, requiredOxygenL, remainingAfterPlanMinutes, warnings };
 }
 
-export function calculateCompoundLiquid({
-  mode,
-  amount,
-  dropsPerMl = null,
-  targetComponentIndex = 0,
-  preparation = 'direct',
-  sourceVolumeMl = null,
-  finalVolumeMl = null,
-  components = []
-}) {
-  const diluted = preparation === 'diluted';
-  const sourceVolume = Number(sourceVolumeMl);
-  const finalVolume = Number(finalVolumeMl);
-  if (diluted && (!finite(sourceVolume, finalVolume) || sourceVolume <= 0 || finalVolume <= 0 || finalVolume < sourceVolume)) {
-    return { ok: false, code: 'invalid_dilution' };
-  }
-  const dilutionFactor = diluted ? sourceVolume / finalVolume : 1;
-  const activeComponents = components
-    .map((component, index) => {
-      const originalConcentrationPerMl = Number(component.concentrationPerMl ?? component.concentrationMgMl);
-      const concentrationPerMl = originalConcentrationPerMl * dilutionFactor;
-      return {
-        ...component,
-        index,
-        unit: component.unit || 'mg',
-        originalConcentrationPerMl,
-        concentrationPerMl,
-        concentrationMgMl: concentrationPerMl
-      };
-    })
-    .filter(component => component.name && Number.isFinite(component.concentrationPerMl) && component.concentrationPerMl > 0);
-  if (!finite(amount) || amount <= 0 || activeComponents.length === 0) return { ok: false, code: 'invalid_range' };
-  if ((mode === 'drops' || mode === 'target') && (!Number.isFinite(dropsPerMl) || dropsPerMl <= 0)) return { ok: false, code: 'invalid_range' };
-
-  let volumeMl = amount;
-  if (mode === 'drops') volumeMl = amount / dropsPerMl;
-  if (mode === 'target') {
-    const target = activeComponents.find(component => component.index === targetComponentIndex) || activeComponents[0];
-    volumeMl = amount / target.concentrationPerMl;
-  }
-  if (!Number.isFinite(volumeMl) || volumeMl <= 0) return { ok: false, code: 'invalid_range' };
-
-  const drops = Number.isFinite(dropsPerMl) && dropsPerMl > 0 ? volumeMl * dropsPerMl : null;
-  const delivered = activeComponents.map(component => ({
-    name: component.name,
-    unit: component.unit,
-    originalConcentrationPerMl: component.originalConcentrationPerMl,
-    concentrationPerMl: component.concentrationPerMl,
-    concentrationMgMl: component.concentrationPerMl,
-    dose: component.concentrationPerMl * volumeMl,
-    doseMg: component.concentrationPerMl * volumeMl
-  }));
-  return {
-    ok: true,
-    mode,
-    preparation: diluted ? 'diluted' : 'direct',
-    dilutionFactor,
-    sourceVolumeMl: diluted ? sourceVolume : null,
-    finalVolumeMl: diluted ? finalVolume : null,
-    volumeMl,
-    drops,
-    delivered
-  };
+export function calculateCompoundReconstitution({ vialMg, diluentMl, prescribedMg }) {
+  if (!finite(vialMg, diluentMl, prescribedMg)) return { ok: false, code: 'invalid_number' };
+  if (!positive(vialMg, diluentMl) || prescribedMg < 0) return { ok: false, code: 'invalid_range' };
+  const concentrationMgMl = vialMg / diluentMl;
+  const volumeMl = prescribedMg / concentrationMgMl;
+  const vialPercent = vialMg > 0 ? prescribedMg / vialMg * 100 : 0;
+  const warnings = [];
+  if (prescribedMg > vialMg) warnings.push('dose_exceeds_vial');
+  if (volumeMl > 0 && volumeMl < 0.01) warnings.push('very_small_volume');
+  return { ok: true, concentrationMgMl, volumeMl, vialPercent, warnings };
 }
 
 export function formatPt(value, maximumFractionDigits = 3) {
